@@ -1,0 +1,80 @@
+# MeshCore Automations for Home Assistant
+# Add these to your automations.yaml or create them via the UI.
+#
+# Note: Entity IDs will vary based on your node names.
+# Adjust entity_id values to match your actual MeshCore entities.
+
+# ============================================================================
+# Notify on new mesh message received
+# ============================================================================
+- alias: "MeshCore - New Message Notification"
+  description: "Send push notification when a new mesh message arrives"
+  trigger:
+    - platform: state
+      entity_id: sensor.meshcore_last_message
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.state != trigger.from_state.state }}"
+  action:
+    - service: notify.mobile_app_your_phone
+      data:
+        title: "MeshCore"
+        message: "{{ trigger.to_state.state }}"
+        data:
+          tag: meshcore-message
+
+# ============================================================================
+# Alert when T-Beam battery is low
+# ============================================================================
+- alias: "MeshCore - T-Beam Low Battery"
+  description: "Alert when relay battery drops below 20%"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.meshcore_tbeam_battery_percent
+      below: 20
+  action:
+    - service: notify.mobile_app_your_phone
+      data:
+        title: "MeshCore Battery Warning"
+        message: "T-Beam relay battery at {{ states('sensor.meshcore_tbeam_battery_percent') }}%"
+        data:
+          tag: meshcore-battery
+
+# ============================================================================
+# Alert when T-Beam goes offline
+# ============================================================================
+- alias: "MeshCore - T-Beam Offline"
+  description: "Alert when relay node goes offline"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.meshcore_tbeam_online
+      to: "off"
+      for:
+        minutes: 5
+  action:
+    - service: notify.mobile_app_your_phone
+      data:
+        title: "MeshCore Offline"
+        message: "T-Beam relay has been offline for 5 minutes"
+        data:
+          tag: meshcore-offline
+
+# ============================================================================
+# Bridge mesh messages to MQTT
+# ============================================================================
+- alias: "MeshCore - MQTT Bridge"
+  description: "Publish mesh messages to MQTT for external consumers"
+  trigger:
+    - platform: state
+      entity_id: sensor.meshcore_last_message
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.state not in ['unknown', 'unavailable'] }}"
+  action:
+    - service: mqtt.publish
+      data:
+        topic: "meshcore/messages"
+        payload: >
+          {{ {"message": trigger.to_state.state,
+              "timestamp": now().isoformat()} | to_json }}
+        retain: false

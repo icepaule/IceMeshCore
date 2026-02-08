@@ -1,0 +1,59 @@
+# MeshCore Dashboard Card for Home Assistant
+# Add this to your Lovelace dashboard via "Edit Dashboard" > "Add Card" > "Manual"
+#
+# Note: Entity IDs will vary based on your node names.
+# Adjust entity_id values to match your actual MeshCore entities.
+
+type: vertical-stack
+cards:
+  - type: markdown
+    content: "## MeshCore Network"
+
+  - type: horizontal-stack
+    cards:
+      - type: entity
+        entity: binary_sensor.meshcore_tbeam_online
+        name: T-Beam
+        icon: mdi:antenna
+      - type: entity
+        entity: sensor.meshcore_tbeam_battery_percent
+        name: Battery
+        icon: mdi:battery
+
+  - type: entities
+    title: T-Beam Relay
+    show_header_toggle: false
+    entities:
+      - entity: binary_sensor.meshcore_tbeam_online
+        name: Status
+      - entity: sensor.meshcore_tbeam_battery_voltage
+        name: Battery Voltage
+      - entity: sensor.meshcore_tbeam_rssi
+        name: Signal (RSSI)
+      - entity: sensor.meshcore_tbeam_snr
+        name: Signal (SNR)
+      - entity: sensor.meshcore_tbeam_uptime
+        name: Uptime
+      - entity: sensor.meshcore_packets_received
+        name: Packets RX
+      - entity: sensor.meshcore_packets_sent
+        name: Packets TX
+
+  - type: entities
+    title: T-Deck Client
+    show_header_toggle: false
+    entities:
+      - entity: device_tracker.meshcore_tdeck
+        name: Location
+      - entity: sensor.meshcore_tdeck_battery
+        name: Battery
+      - entity: sensor.meshcore_tdeck_last_seen
+        name: Last Seen
+
+  - type: map
+    title: Node Locations
+    entities:
+      - entity: device_tracker.meshcore_tdeck
+      - entity: device_tracker.meshcore_tbeam
+    default_zoom: 14
+    aspect_ratio: "16:9"
