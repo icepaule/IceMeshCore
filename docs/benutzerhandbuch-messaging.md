@@ -31,47 +31,13 @@ http://192.168.178.108:8123
 
 Falls du eingeloggt bist, siehst du das Home Assistant Dashboard. Tippe in der Seitenleiste auf **MeshCore** (Symbol: Funkturm).
 
-```
-+------------------------------------------+
-|  Seitenleiste        |                   |
-|                      |                   |
-|  Uebersicht          |                   |
-|  Energie             |                   |
-|  Karte               |                   |
-|                      |                   |
-|  > MeshCore  <-------|-- HIER TIPPEN     |
-|                      |                   |
-+------------------------------------------+
-```
+![Seitenleiste mit MeshCore](images/screenshot-03-sidebar.png)
 
 ### Schritt 2: Empfaenger waehlen
 
 Du siehst das MeshCore Messenger-Fenster:
 
-```
-+------------------------------------------+
-|                                          |
-|  # MeshCore Messenger                    |
-|                                          |
-|  +------------------------------------+  |
-|  | Nachricht verfassen                 |  |
-|  |                                     |  |
-|  | Empfaenger-Typ:  [ Contact    v ]   |  |
-|  |                                     |  |
-|  | Kontakt:     [ IceDeck (...)  v ]   |  |
-|  |                                     |  |
-|  | Kanal:       [ Public (0)     v ]   |  |
-|  |                                     |  |
-|  | Nachricht:   [                  ]   |  |
-|  |                                     |  |
-|  +------------------------------------+  |
-|                                          |
-|         +---------------------+          |
-|         |   Nachricht senden  |          |
-|         +---------------------+          |
-|                                          |
-+------------------------------------------+
-```
+![MeshCore Messenger Dashboard](images/screenshot-01-dashboard-messenger.png)
 
 **Fuer eine Nachricht direkt an Marcus:**
 
@@ -89,14 +55,7 @@ Du siehst das MeshCore Messenger-Fenster:
 
 ### Schritt 3: Warten auf Antwort
 
-Wenn Marcus antwortet, erscheint eine **Benachrichtigung** oben im Home Assistant Dashboard:
-
-```
-+------------------------------------------+
-| ! MeshCore Nachricht                     |
-|   "Bin in 30 Minuten da!"               |
-+------------------------------------------+
-```
+Wenn Marcus antwortet, erscheint eine **Benachrichtigung** oben im Home Assistant Dashboard.
 
 > **Hinweis**: Nachrichten koennen einige Sekunden brauchen, da sie ueber Funk uebertragen werden.
 
@@ -118,17 +77,7 @@ Wenn Marcus antwortet, erscheint eine **Benachrichtigung** oben im Home Assistan
 
 ### Statusanzeige
 
-Auf der rechten Seite des Dashboards siehst du den Status:
-
-```
-+-----------------------------+
-| T-Beam Gateway              |
-|                             |
-| Status:     online          |
-| Batterie:   95%             |
-| Frequenz:   869.618 MHz     |
-+-----------------------------+
-```
+Auf der rechten Seite des Dashboards siehst du den Status (siehe rechte Seite im Screenshot oben).
 
 - **Status: online** = Alles OK, Gateway ist bereit
 - **Status: offline** = T-Beam ist nicht erreichbar (Strom pruefen!)
