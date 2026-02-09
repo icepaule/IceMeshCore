@@ -1,0 +1,144 @@
+================================================================================
+  Home Assistant Dashboard: MeshCore  (lovelace_meshcore)
+================================================================================
+
+  Two views (tabs):
+    [1] MeshCore Messenger  (icon: mdi:message-text,  path: /messenger)
+    [2] Kommandozeile        (icon: mdi:console,       path: /commands)
+
+
+================================================================================
+  VIEW 1: MeshCore Messenger
+================================================================================
+
+  +-------------------------------------+  +-------------------------------------+
+  | COLUMN 1 (vertical-stack)           |  | COLUMN 2 (vertical-stack)           |
+  |                                     |  |                                     |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  | | [Markdown Card]                  | |  | | [Entities Card]                  | |
+  | |                                  | |  | | Title: "T-Beam Gateway"          | |
+  | |  # MeshCore Messenger            | |  | |                                  | |
+  | |  Nachrichten ueber LoRa Mesh     | |  | |  Status ........... node_status  | |
+  | |  senden und empfangen            | |  | |  Batterie ......... battery_%    | |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |  | |  Frequenz ......... frequency     | |
+  |                                     |  | |  Spreading Factor . spread_factor | |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |  | |  Bandwidth ........ bandwidth     | |
+  | | [Entities Card]                  | |  | |  TX Power ......... tx_power     | |
+  | | Title: "Nachricht verfassen"     | |  | |                                  | |
+  | |                                  | |  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  | |  Empfaenger-Typ ... [v Dropdown] | |  |                                     |
+  | |    (select.meshcore_             | |  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  | |     recipient_type)              | |  | | [Entities Card]                  | |
+  | |                                  | |  | | Title: "Mesh Kontakte"           | |
+  | |  Kontakt ......... [v Dropdown]  | |  | |                                  | |
+  | |    (select.meshcore_contact)     | |  | |  o icedeck_<ID>_contact          | |
+  | |                                  | |  | |  o mfn6_repeater_fn_<ID>_contact | |
+  | |  Kanal ........... [v Dropdown]  | |  | |  o station_g2_repeater_<ID>      | |
+  | |    (select.meshcore_channel)     | |  | |    _contact                      | |
+  | |                                  | |  | |                                  | |
+  | |  Nachricht ....... [_________]   | |  | |  (binary_sensor indicators:      | |
+  | |    (text.meshcore_message)       | |  | |   online/offline per contact)    | |
+  | |                                  | |  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |  |                                     |
+  |                                     |  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |  | | [Entities Card]                  | |
+  | | [Button Card]                    | |  | | Title: "Kontakte verwalten"      | |
+  | |                                  | |  | |                                  | |
+  | |        +---------------+         | |  | |  Entdeckte           [v Drop-   | |
+  | |        |   mdi:send    |         | |  | |  Kontakte              down]    | |
+  | |        |  (40px icon)  |         | |  | |    (select.meshcore_            | |
+  | |        +---------------+         | |  | |     discovered_contact)         | |
+  | |       Nachricht senden           | |  | |                                  | |
+  | |                                  | |  | |  Hinzugefuegte       [v Drop-   | |
+  | |  tap_action:                     | |  | |  Kontakte              down]    | |
+  | |    meshcore.send_ui_message      | |  | |    (select.meshcore_            | |
+  | |                                  | |  | |     added_contact)              | |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |  | |                                  | |
+  |                                     |  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  +-------------------------------------+  +-------------------------------------+
+
+
+================================================================================
+  VIEW 2: Kommandozeile
+================================================================================
+
+  +-------------------------------------+
+  | COLUMN 1 (vertical-stack)           |
+  |                                     |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  | | [Markdown Card]                  | |
+  | |                                  | |
+  | |  # MeshCore Kommandozeile        | |
+  | |  Direkte Befehle an den          | |
+  | |  T-Beam senden                   | |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  |                                     |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  | | [Entities Card]                  | |
+  | |                                  | |
+  | |  Befehl ......... [___________]  | |
+  | |    (text.meshcore_command)       | |
+  | |                                  | |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  |                                     |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  | | [Button Card]                    | |
+  | |                                  | |
+  | |        +---------------+         | |
+  | |        |   mdi:play    |         | |
+  | |        |  (40px icon)  |         | |
+  | |        +---------------+         | |
+  | |         Ausfuehren               | |
+  | |                                  | |
+  | |  tap_action:                     | |
+  | |    meshcore.execute_command_ui   | |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  |                                     |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  | | [Markdown Card]                  | |
+  | |                                  | |
+  | |  ### Nuetzliche Befehle          | |
+  | |                                  | |
+  | |  - get_bat          Battery      | |
+  | |  - set_name "Name"  Set name     | |
+  | |  - set_tx_power 20  TX power     | |
+  | |  - set_coords LAT LON           | |
+  | |                     Coordinates  | |
+  | +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+ |
+  |                                     |
+  +-------------------------------------+
+
+
+================================================================================
+  Entity Reference (all entities used in this dashboard)
+================================================================================
+
+  Selects (dropdowns):
+    select.meshcore_recipient_type     - Choose DM / Channel / Broadcast
+    select.meshcore_contact            - Pick a contact for DM
+    select.meshcore_channel            - Pick a channel
+    select.meshcore_discovered_contact - Contacts found via mesh discovery
+    select.meshcore_added_contact      - Contacts already added
+
+  Text inputs:
+    text.meshcore_message              - Message body to send
+    text.meshcore_command              - Raw command string
+
+  Sensors (T-Beam gateway info):
+    sensor.meshcore_node_status_t_beam
+    sensor.meshcore_battery_percentage_t_beam
+    sensor.meshcore_frequency_t_beam
+    sensor.meshcore_spreading_factor_t_beam
+    sensor.meshcore_bandwidth_t_beam
+    sensor.meshcore_tx_power_t_beam
+
+  Binary sensors (mesh contact online/offline):
+    binary_sensor.meshcore_icedeck_<ID>_contact
+    binary_sensor.meshcore_mfn6_repeater_fn_<ID>_contact
+    binary_sensor.meshcore_station_g2_repeater_<ID>_contact
+
+  Service calls (button actions):
+    meshcore.send_ui_message           - Send the composed message
+    meshcore.execute_command_ui        - Execute the typed command
+
+================================================================================

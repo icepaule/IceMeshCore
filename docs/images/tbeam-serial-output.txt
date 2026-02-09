@@ -1,0 +1,11 @@
+===== T-Beam WiFi Companion Radio - Serial Output =====
+
+Note: The companion radio firmware outputs minimal data on serial.
+The primary interface is TCP port 5000 over WiFi.
+
+(No serial output - companion radio is running normally)
+
+
+To verify connectivity:
+  ping <T-BEAM-IP>
+  nc -zv <T-BEAM-IP> 5000

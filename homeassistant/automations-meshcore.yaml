@@ -1,80 +1,75 @@
 # MeshCore Automations for Home Assistant
-# Add these to your automations.yaml or create them via the UI.
 #
-# Note: Entity IDs will vary based on your node names.
+# Add these to your automations.yaml or create them via the HA UI.
+#
+# These automations use meshcore-ha's event system:
+# - meshcore_raw_event: All raw MeshCore events (with event_type and payload)
+# - meshcore_message_sent: Outgoing message confirmation
+#
 # Adjust entity_id values to match your actual MeshCore entities.
 
-# ============================================================================
-# Notify on new mesh message received
-# ============================================================================
-- alias: "MeshCore - New Message Notification"
-  description: "Send push notification when a new mesh message arrives"
+# =============================================================================
+# Notify on incoming mesh messages (channel or direct)
+# =============================================================================
+- id: meshcore_message_notify
+  alias: "MeshCore - New Message Notification"
+  description: "Persistent notification for incoming mesh messages"
   trigger:
-    - platform: state
-      entity_id: sensor.meshcore_last_message
+    - platform: event
+      event_type: meshcore_raw_event
   condition:
     - condition: template
-      value_template: "{{ trigger.to_state.state != trigger.from_state.state }}"
+      value_template: "{{ trigger.event.data.event_type in ['CHANNEL_MSG', 'DIRECT_MSG'] }}"
   action:
-    - service: notify.mobile_app_your_phone
+    - service: persistent_notification.create
       data:
-        title: "MeshCore"
-        message: "{{ trigger.to_state.state }}"
-        data:
-          tag: meshcore-message
+        title: "MeshCore Message"
+        message: >
+          {{ trigger.event.data.payload.get('text',
+             trigger.event.data.payload | string) }}
+        notification_id: "meshcore_{{ now().timestamp() | int }}"
+  mode: queued
+  max: 10
 
-# ============================================================================
-# Alert when T-Beam battery is low
-# ============================================================================
-- alias: "MeshCore - T-Beam Low Battery"
-  description: "Alert when relay battery drops below 20%"
+# =============================================================================
+# Forward mesh messages to MQTT for external consumers
+# =============================================================================
+- id: meshcore_mqtt_bridge
+  alias: "MeshCore - MQTT Bridge"
+  description: "Publish mesh messages to MQTT topics"
   trigger:
-    - platform: numeric_state
-      entity_id: sensor.meshcore_tbeam_battery_percent
-      below: 20
-  action:
-    - service: notify.mobile_app_your_phone
-      data:
-        title: "MeshCore Battery Warning"
-        message: "T-Beam relay battery at {{ states('sensor.meshcore_tbeam_battery_percent') }}%"
-        data:
-          tag: meshcore-battery
-
-# ============================================================================
-# Alert when T-Beam goes offline
-# ============================================================================
-- alias: "MeshCore - T-Beam Offline"
-  description: "Alert when relay node goes offline"
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.meshcore_tbeam_online
-      to: "off"
-      for:
-        minutes: 5
-  action:
-    - service: notify.mobile_app_your_phone
-      data:
-        title: "MeshCore Offline"
-        message: "T-Beam relay has been offline for 5 minutes"
-        data:
-          tag: meshcore-offline
-
-# ============================================================================
-# Bridge mesh messages to MQTT
-# ============================================================================
-- alias: "MeshCore - MQTT Bridge"
-  description: "Publish mesh messages to MQTT for external consumers"
-  trigger:
-    - platform: state
-      entity_id: sensor.meshcore_last_message
+    - platform: event
+      event_type: meshcore_raw_event
   condition:
     - condition: template
-      value_template: "{{ trigger.to_state.state not in ['unknown', 'unavailable'] }}"
+      value_template: >
+        {{ trigger.event.data.event_type in
+           ['CHANNEL_MSG', 'DIRECT_MSG', 'NEW_CONTACT'] }}
   action:
     - service: mqtt.publish
       data:
-        topic: "meshcore/messages"
-        payload: >
-          {{ {"message": trigger.to_state.state,
-              "timestamp": now().isoformat()} | to_json }}
+        topic: "meshcore/{{ trigger.event.data.event_type | lower }}"
+        payload: "{{ trigger.event.data.payload | tojson }}"
         retain: false
+  mode: queued
+  max: 20
+
+# =============================================================================
+# Alert when T-Beam battery drops below 20%
+# =============================================================================
+- id: meshcore_battery_low
+  alias: "MeshCore - T-Beam Low Battery"
+  description: "Warning when T-Beam battery is below 20%"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.meshcore_battery_percentage_t_beam
+      below: 20
+  action:
+    - service: persistent_notification.create
+      data:
+        title: "MeshCore - Battery Low!"
+        message: >
+          T-Beam battery at
+          {{ states('sensor.meshcore_battery_percentage_t_beam') }}%
+        notification_id: meshcore_battery_low
+  mode: single

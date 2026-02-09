@@ -3,6 +3,7 @@
 *.credentials
 secrets.yaml
 wifi_credentials.txt
+.env
 
 # Build artifacts
 .pio/
@@ -12,9 +13,16 @@ __pycache__/
 *.o
 *.bin
 *.elf
+*.hex
 
-# MeshCore source tree (build locally, don't push)
+# MeshCore source tree (build locally from git clone)
 MeshCore/
+
+# Firmware binaries
+firmware/
+
+# Downloaded map tiles (too large for git)
+tiles/
 
 # OS files
 .DS_Store

@@ -1,59 +1,120 @@
-# MeshCore Dashboard Card for Home Assistant
-# Add this to your Lovelace dashboard via "Edit Dashboard" > "Add Card" > "Manual"
+# MeshCore Dashboard for Home Assistant
 #
-# Note: Entity IDs will vary based on your node names.
-# Adjust entity_id values to match your actual MeshCore entities.
+# Create a new dashboard: Settings > Dashboards > Add Dashboard
+#   Title: MeshCore, Icon: mdi:radio-tower, Show in sidebar: Yes
+#
+# Then add these cards via "Edit Dashboard" > "Add Card" > "Manual"
+#
+# Note: Entity IDs use the node name from meshcore-ha setup.
+# Replace "t_beam" with your actual device name suffix.
+
+# =============================================================================
+# View 1: Messenger (for Galaxy Tab / Kiosk)
+# =============================================================================
+
+# --- Card 1: Message Composition ---
+type: vertical-stack
+cards:
+  - type: markdown
+    content: "# MeshCore Messenger"
+
+  - type: entities
+    title: Send Message
+    show_header_toggle: false
+    entities:
+      - entity: select.meshcore_recipient_type
+        name: "Recipient Type"
+      - entity: select.meshcore_contact
+        name: "Contact"
+      - entity: select.meshcore_channel
+        name: "Channel"
+      - entity: text.meshcore_message
+        name: "Message"
+
+  - type: button
+    name: "Send Message"
+    icon: mdi:send
+    tap_action:
+      action: perform-action
+      perform_action: meshcore.send_ui_message
+    icon_height: 40px
+
+---
+
+# --- Card 2: Gateway Status ---
+type: entities
+title: "T-Beam Gateway"
+show_header_toggle: false
+entities:
+  - entity: sensor.meshcore_node_status_t_beam
+    name: "Status"
+  - entity: sensor.meshcore_battery_percentage_t_beam
+    name: "Battery"
+  - entity: sensor.meshcore_battery_voltage_t_beam
+    name: "Voltage"
+  - entity: sensor.meshcore_frequency_t_beam
+    name: "Frequency"
+  - entity: sensor.meshcore_spreading_factor_t_beam
+    name: "Spreading Factor"
+  - entity: sensor.meshcore_bandwidth_t_beam
+    name: "Bandwidth"
+  - entity: sensor.meshcore_tx_power_t_beam
+    name: "TX Power"
+
+---
+
+# --- Card 3: Mesh Contacts ---
+# Note: Contact entity IDs are auto-generated from public key prefixes.
+# Replace <ID> with the actual hex prefix shown in HA entities.
+type: entities
+title: "Mesh Contacts"
+show_header_toggle: false
+entities:
+  - entity: binary_sensor.meshcore_YOURCONTACT_<ID>_contact
+    name: "Your Contact"
+  # Add more contacts as they appear in the mesh
+
+---
+
+# --- Card 4: Contact Management ---
+type: entities
+title: "Manage Contacts"
+show_header_toggle: false
+entities:
+  - entity: select.meshcore_discovered_contact
+    name: "Discovered Contacts"
+  - entity: select.meshcore_added_contact
+    name: "Added Contacts"
+
+---
+
+# =============================================================================
+# View 2: Command Line
+# =============================================================================
 
 type: vertical-stack
 cards:
   - type: markdown
-    content: "## MeshCore Network"
-
-  - type: horizontal-stack
-    cards:
-      - type: entity
-        entity: binary_sensor.meshcore_tbeam_online
-        name: T-Beam
-        icon: mdi:antenna
-      - type: entity
-        entity: sensor.meshcore_tbeam_battery_percent
-        name: Battery
-        icon: mdi:battery
+    content: "# MeshCore Command Line"
 
   - type: entities
-    title: T-Beam Relay
     show_header_toggle: false
     entities:
-      - entity: binary_sensor.meshcore_tbeam_online
-        name: Status
-      - entity: sensor.meshcore_tbeam_battery_voltage
-        name: Battery Voltage
-      - entity: sensor.meshcore_tbeam_rssi
-        name: Signal (RSSI)
-      - entity: sensor.meshcore_tbeam_snr
-        name: Signal (SNR)
-      - entity: sensor.meshcore_tbeam_uptime
-        name: Uptime
-      - entity: sensor.meshcore_packets_received
-        name: Packets RX
-      - entity: sensor.meshcore_packets_sent
-        name: Packets TX
+      - entity: text.meshcore_command
+        name: "Command"
 
-  - type: entities
-    title: T-Deck Client
-    show_header_toggle: false
-    entities:
-      - entity: device_tracker.meshcore_tdeck
-        name: Location
-      - entity: sensor.meshcore_tdeck_battery
-        name: Battery
-      - entity: sensor.meshcore_tdeck_last_seen
-        name: Last Seen
+  - type: button
+    name: "Execute"
+    icon: mdi:play
+    tap_action:
+      action: perform-action
+      perform_action: meshcore.execute_command_ui
+    icon_height: 40px
 
-  - type: map
-    title: Node Locations
-    entities:
-      - entity: device_tracker.meshcore_tdeck
-      - entity: device_tracker.meshcore_tbeam
-    default_zoom: 14
-    aspect_ratio: "16:9"
+  - type: markdown
+    content: |
+      ### Useful Commands
+      - `get_bat` - Battery status
+      - `set_name "Name"` - Set device name
+      - `set_tx_power 20` - Set TX power (dBm)
+      - `set_coords LAT LON` - Set coordinates

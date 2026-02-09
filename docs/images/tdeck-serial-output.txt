@@ -1,0 +1,54 @@
+===== T-Deck MeshOS Serial Console =====
+
+/get radio
+  Radio Settings:
+    Frequency: 869.618 MHz
+    Spreading Factor: SF10
+    Bandwidth: 62.5 kHz
+    Coding Rate: 4/5
+    TX Power: 22 dBm
+
+/card
+Hello IceDeck
+Your MeshCore biz card:
+meshcore://10CF2C5D3D00F074C0E4E6A3242C0D4D3F662946E9E25B158A49337233610BFFDDBDECD2D76969A244662AC2C81B1F2333D05AA8217D7889145CFDE80F79A566144155BB9F1A401C00BED7FDB3C5C85D09F3C3135CEBE25F54A55B4BF0BFB6AB482E1E1AF5F50AEB8A019100000000000000004963654465636B
+
+/memory
+
+=== Memory Status ===
+Total Heap:    244548 bytes (238.8 KB)
+Free Heap:     161260 bytes (157.5 KB)
+Used Heap:     83288 bytes (81.3 KB)
+Min Free Ever: 154732 bytes (151.1 KB)
+
+Status: Healthy (plenty of memory)
+
+=== Estimated Buffer Usage ===
+Messages (RAM): 10.0 KB (50 messages)
+Advert history: 1.1 KB (20 adverts)
+Other buffers: ~3.0 KB
+Total:        ~14.1 KB
+(No message cache - direct RAM access!)
+
+/battery
+   === Battery Info ===
+   Voltage: 4.40 V
+   Charge: ~100% [GOOD]
+
+/gps get
+GPS Status:
+   Enabled: no
+   Baud rate: 38400
+
+/channels
+   Channels:
+   1: Public - Public
+   2: ch2 - (not set)
+   3: ch3 - (not set)
+   4: ch4 - (not set)
+
+/messages 5
+   === Last 1 Message ===
+   [Public] D3DBDD42: Hallo Mesh! Broadcast Test vom HA. (at 19:15 8/2)
+   Total messages in history: 1
+

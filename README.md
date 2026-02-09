@@ -1,113 +1,107 @@
-# IceMeshCore - MeshCore LoRa Mesh Setup
+# IceMeshCore - MeshCore LoRa Mesh Communication Setup
 
-Off-grid LoRa mesh communication setup using [MeshCore](https://meshcore.co.uk/) firmware on LilyGo hardware, integrated with Home Assistant.
+Complete step-by-step guide for setting up a [MeshCore](https://meshcore.co.uk/) LoRa mesh network with LilyGo hardware, integrated with Home Assistant for monitoring and messaging from a tablet/dashboard.
 
-## Architecture
+## Architecture Overview
 
 ```
-                    LoRa 868 MHz
- [T-Deck] <~~~~~~~~~~~~~~~~~~~~~~~~~> [T-Beam Relay]
- (Portable Client)                     (Stationary Gateway)
-  - BLE Companion                       - WiFi Companion
-  - Keyboard + Display                  - Strong Antenna
-  - MeshCore App (BLE)                  - TCP:5000
-                                        |
-                                        | WiFi
-                                        v
-                                   [Home Network]
-                                        |
-                                        v
-                                   [Home Assistant]
-                                    - meshcore-ha
-                                    - MQTT Bridge
-                                    - Automations
+                        LoRa 868.618 MHz
+                       SF10 / BW 62.5 kHz
+  [T-Deck "IceDeck"] <~~~~~~~~~~~~~~~~~~~~~~~> [T-Beam SX1276]
+   (Portable Client)                            (Relay / Gateway)
+    - MeshOS/Ultra FW                            - WiFi Companion FW
+    - Physical Keyboard                          - Built from Source
+    - GPS + Offline Maps                         - TCP:5000
+    - SD Card (Map Tiles)                        |
+    - Direct LoRa Mesh                           | WiFi (IoT VLAN)
+                                                 v
+                                            [Home Network]
+                                                 |
+                                                 v
+                                          [Home Assistant]
+                                           - meshcore-ha Integration
+                                           - MeshCore Dashboard
+                                           - MQTT Bridge
+                                           - Automations & Alerts
+                                                 |
+                                                 v
+                                          [Galaxy Tab Kiosk]
+                                           - HA Dashboard URL
+                                           - Send/Receive Messages
+                                           - Monitor Mesh Status
 ```
 
 ## Hardware
 
-| Device | Role | Radio | Firmware | Connection |
-|--------|------|-------|----------|------------|
-| LilyGo T-Beam (SX1276) | Relay / Gateway | LoRa 868 MHz, 20 dBm | Companion Radio WiFi | WiFi -> TCP:5000 |
-| LilyGo T-Deck | Portable Client | LoRa 868 MHz | Companion Radio BLE | BLE to Phone / Standalone |
+| Device | Chip | Role | Radio | Firmware | Connection |
+|--------|------|------|-------|----------|------------|
+| LilyGo T-Beam v1.x | ESP32 + SX1276 | Relay / Gateway | 869.618 MHz, 20 dBm | Companion Radio WiFi (custom build) | WiFi TCP:5000 |
+| LilyGo T-Deck | ESP32-S3 + SX1262 | Portable Client | 869.618 MHz, 22 dBm | MeshOS/Ultra (closed-source) | USB / Standalone |
 
-### T-Beam (Relay)
-- **Role**: Stationary mesh relay with external antenna, WiFi gateway to Home Assistant
-- **Firmware**: Custom-built `Tbeam_SX1276_companion_radio_wifi` (built from source)
-- **Features**: LoRa relay, GPS, WiFi TCP server (port 5000), OLED display
-- **Power**: USB or battery (AXP2101 PMU)
+### Radio Settings (EU - Long Range)
 
-### T-Deck (Client)
-- **Role**: Portable handheld mesh client
-- **Firmware**: Pre-built `LilyGo_TDeck_companion_radio_ble` v1.12.0
-- **Features**: Physical keyboard, display, BLE pairing, standalone messaging
-- **BLE PIN**: 123456 (default)
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| Frequency | 869.618 MHz | EU MeshCore standard, legal in DE/AT/CH |
+| Spreading Factor | SF10 | Long range (~5-10 km rural, ~2-3 km urban) |
+| Bandwidth | 62.5 kHz | Narrow = better sensitivity and range |
+| Coding Rate | 4/5 | Minimum FEC, sufficient for good signal |
+| TX Power | 20-22 dBm | Maximum legal (T-Beam: 20, T-Deck: 22) |
 
-## Quick Start
+## Step-by-Step Setup
 
-### 1. Flash T-Beam (Relay)
+1. **[Flash T-Beam Relay](#step-1-flash-t-beam)** - Build and flash WiFi companion firmware
+2. **[Flash T-Deck Client](#step-2-flash-t-deck)** - Flash MeshOS via web flasher
+3. **[Configure T-Deck](#step-3-configure-t-deck)** - Set radio parameters and name
+4. **[Setup Home Assistant](#step-4-home-assistant-integration)** - Install meshcore-ha + dashboard
+5. **[Download Map Tiles](#step-5-offline-map-tiles)** - Germany + Austria offline maps for T-Deck
+6. **[Test Communication](#step-6-test-mesh-communication)** - Verify bidirectional messaging
 
-See [docs/flash-tbeam.md](docs/flash-tbeam.md) for detailed instructions.
-
-```bash
-# Clone MeshCore source
-git clone https://github.com/meshcore-dev/MeshCore.git
-cd MeshCore
-
-# Copy custom WiFi companion config
-cp ../configs/tbeam_sx1276_wifi.ini variants/lilygo_tbeam_SX1276/platformio.ini
-
-# Edit WiFi credentials (REQUIRED - replace placeholders!)
-nano variants/lilygo_tbeam_SX1276/platformio.ini
-
-# Build and flash
-pio run -e Tbeam_SX1276_companion_radio_wifi -t upload --upload-port /dev/ttyACM0
-```
-
-### 2. Flash T-Deck (Client)
-
-See [docs/flash-tdeck.md](docs/flash-tdeck.md) for detailed instructions.
-
-```bash
-# Download pre-built firmware
-./scripts/flash-tdeck.sh /dev/ttyACM0
-```
-
-### 3. Home Assistant Integration
-
-See [docs/homeassistant.md](docs/homeassistant.md) for detailed instructions.
-
-1. Install `meshcore-ha` custom component
-2. Restart Home Assistant
-3. Add MeshCore integration via Settings > Devices & Services
-4. Select TCP connection, enter T-Beam IP and port 5000
+Detailed instructions: [docs/setup-guide.md](docs/setup-guide.md)
 
 ## Directory Structure
 
 ```
 IceMeshCore/
-  configs/          # PlatformIO config templates (no credentials!)
-  scripts/          # Flash and utility scripts
-  docs/             # Detailed documentation
-  homeassistant/    # HA dashboard and automation examples
-  README.md         # This file
+  configs/              # PlatformIO config templates (no credentials!)
+    tbeam_sx1276_wifi.ini
+  docs/                 # Detailed step-by-step documentation
+    setup-guide.md      # Complete setup walkthrough
+    flash-tbeam.md      # T-Beam flashing details + troubleshooting
+    flash-tdeck.md      # T-Deck flashing details
+    homeassistant.md    # HA integration setup
+    architecture.md     # Network architecture details
+    radio-settings.md   # Radio configuration reference
+    images/             # Diagrams and console output examples
+  homeassistant/        # HA configuration examples
+    dashboard-meshcore.yaml
+    automations-meshcore.yaml
+  scripts/              # Build and utility scripts
+    build-tbeam.sh
+    flash-tdeck.sh
+    download-tiles.py
+  README.md
 ```
 
 ## Important Notes
 
-- **Frequency**: 868 MHz (EU legal requirement for DE/AT/CH)
-- **No credentials in this repo** - WiFi/MQTT passwords must be set locally before building
-- **MeshCore is open source** - firmware is free, T-Deck registration key optional
-- **T-Beam radio**: This setup uses SX1276 variant. Check your hardware before building!
+- **EU Frequency**: 868 MHz band (legal requirement for DE/AT/CH)
+- **No credentials in repo** - WiFi/MQTT passwords must be set locally
+- **T-Beam radio identification**: This setup uses **SX1276** - check your hardware!
+  - SX1276: 868 MHz only, 20 dBm max
+  - SX1262: 868 MHz, 22 dBm max (different firmware!)
+- **MeshOS/Ultra**: Closed-source T-Deck firmware with map support, flashed via web tool
+- **MeshCore open-source**: Companion radio firmware is open source and built from source
 
 ## Links
 
 - [MeshCore Project](https://meshcore.co.uk/)
-- [MeshCore GitHub](https://github.com/meshcore-dev/MeshCore)
-- [MeshCore Web Flasher](https://flasher.meshcore.co.uk/)
+- [MeshCore Firmware Source](https://github.com/meshcore-dev/MeshCore)
+- [MeshCore Web Flasher](https://flasher.meshcore.co.uk/) (for T-Deck MeshOS/Ultra)
 - [MeshCore HA Integration](https://github.com/meshcore-dev/meshcore-ha)
 - [MeshCore Web App](https://app.meshcore.nz)
 - [MeshCore Config Tool](https://config.meshcore.dev/)
 
 ## License
 
-MIT
+MIT - See [LICENSE](LICENSE)
