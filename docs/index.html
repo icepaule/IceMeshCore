@@ -1,0 +1,191 @@
+<title>IceMeshCore – MeshCore LoRa-Mesh mit Home Assistant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Aufbau eines privaten MeshCore-LoRa-Mesh-Netzwerks mit LilyGo-Hardware, integriert in Home Assistant.">
+<style>
+:root { --primary:#1a56db; --primary-light:#e8effc; --bg:#f8fafc; --card:#ffffff; --text:#1e293b; --text-muted:#64748b; --border:#e2e8f0; --accent:#059669; --accent-light:#ecfdf5; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+.container { max-width:1100px; margin:0 auto; padding:0 24px; }
+header { background:linear-gradient(135deg,#1e3a5f 0%,#1a56db 100%); color:white; padding:60px 0 50px; }
+header h1 { font-size:2.5rem; margin-bottom:12px; display:flex; align-items:center; gap:16px; }
+header .icon { width:48px; height:48px; flex-shrink:0; }
+header p { font-size:1.15rem; opacity:0.9; max-width:700px; }
+.badge { display:inline-block; background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px; font-size:0.85rem; margin-top:16px; }
+nav { background:var(--card); border-bottom:1px solid var(--border); position:sticky; top:0; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+nav .container { display:flex; overflow-x:auto; }
+nav a { padding:14px 20px; text-decoration:none; color:var(--text-muted); font-size:0.9rem; font-weight:500; white-space:nowrap; border-bottom:2px solid transparent; }
+nav a:hover { color:var(--primary); border-bottom-color:var(--primary); }
+section { padding:50px 0; }
+section:nth-child(even) { background:var(--card); }
+h2 { font-size:1.8rem; margin-bottom:24px; }
+h3 { font-size:1.2rem; margin:20px 0 12px; }
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; margin-top:20px; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+section:nth-child(even) .card { background:var(--bg); }
+.card h3 { margin-top:0; color:var(--primary); }
+.card p { color:var(--text-muted); font-size:0.95rem; }
+table { width:100%; border-collapse:collapse; margin:16px 0; font-size:0.9rem; }
+th, td { padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); }
+th { background:var(--primary-light); color:var(--primary); font-weight:600; }
+.mermaid-wrap { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px; margin:24px 0; overflow-x:auto; }
+section:nth-child(even) .mermaid-wrap { background:var(--bg); }
+pre:not(.mermaid) { background:#1e293b; color:#e2e8f0; padding:20px; border-radius:10px; overflow-x:auto; font-size:0.85rem; }
+code { background:var(--primary-light); padding:2px 6px; border-radius:4px; font-size:0.85rem; }
+pre code { background:none; padding:0; }
+.tech-grid { display:flex; flex-wrap:wrap; gap:12px; margin:20px 0; }
+.tech-item { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px 18px; font-size:0.9rem; font-weight:500; }
+section:nth-child(even) .tech-item { background:var(--bg); }
+footer { background:#1e293b; color:#94a3b8; padding:40px 0; text-align:center; font-size:0.85rem; }
+footer a { color:#60a5fa; text-decoration:none; }
+</style>
+
+<header>
+  <div class="container">
+    <h1>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 6v6M12 12 6 17M12 12l6 5"/></svg>
+      IceMeshCore
+    </h1>
+    <p>Aufbau eines eigenen, funkbasierten MeshCore-LoRa-Mesh-Netzwerks mit LilyGo-Hardware – abhoerresistent von Mobilfunk und Internet, mit Anbindung an Home Assistant zum Senden und Empfangen von Nachrichten.</p>
+    <span class="badge">EU 869.618 MHz · SF10 · Ende-zu-Ende-verschluesselt</span>
+  </div>
+</header>
+
+<nav>
+  <div class="container">
+    <a href="#ueberblick">Ueberblick</a>
+    <a href="#architektur">Architektur</a>
+    <a href="#hardware">Hardware</a>
+    <a href="#techstack">Tech-Stack</a>
+    <a href="#quickstart">Quickstart</a>
+  </div>
+</nav>
+
+<section id="ueberblick">
+  <div class="container">
+    <h2>Ueberblick</h2>
+    <p>IceMeshCore ist eine Schritt-fuer-Schritt-Doku- und Konfigurationssammlung fuer den Aufbau eines privaten <a href="https://meshcore.co.uk/">MeshCore</a>-LoRa-Mesh-Netzwerks. Statt Mobilfunk oder WLAN tauschen die Geraete Nachrichten direkt per LoRa-Funk aus – jedes Client- oder Repeater-Geraet leitet dabei Pakete fuer andere Knoten weiter und vergroessert so die Reichweite des Netzes. Ueber ein WiFi-Gateway wird das Mesh zusaetzlich an Home Assistant angebunden, sodass Nachrichten auch bequem per Tablet-Dashboard gesendet und empfangen werden koennen.</p>
+    <p>Das Repository selbst enthaelt keinen MeshCore-Firmware-Quellcode, sondern PlatformIO-Konfigurationsvorlagen, Build-/Flash-Skripte, Home-Assistant-Konfigurationsbeispiele und ausfuehrliche deutsch-/englischsprachige Anleitungen fuer jeden Einrichtungsschritt.</p>
+    <div class="card-grid">
+      <div class="card">
+        <h3>Privates Funknetz</h3>
+        <p>Kommunikation komplett ohne Internet oder Mobilfunk – reines LoRa-Mesh auf 869,618 MHz im europaeischen Frequenzband.</p>
+      </div>
+      <div class="card">
+        <h3>Ende-zu-Ende-Verschluesselung</h3>
+        <p>Alle Mesh-Nachrichten sind Public-Key-verschluesselt; Repeater-Adminzugriff ist zusaetzlich per Passwort geschuetzt.</p>
+      </div>
+      <div class="card">
+        <h3>Home-Assistant-Integration</h3>
+        <p>WiFi-Gateway spricht TCP:5000 mit der meshcore-ha-Integration – Dashboards, Automationen und optionale MQTT-Bruecke inklusive.</p>
+      </div>
+      <div class="card">
+        <h3>Reichweiten-Erweiterung</h3>
+        <p>Ein dedizierter Repeater mit OLED-Statusdisplay leitet Pakete zwischen Knoten weiter, die sich sonst nicht direkt erreichen wuerden.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="architektur">
+  <div class="container">
+    <h2>Architektur</h2>
+    <p>Drei Geraetetypen bilden das Mesh: ein portabler Client mit Tastatur und Karten (T-Deck), ein staionaerer Repeater mit OLED-Statusanzeige (T-Beam Supreme) und ein WiFi-Gateway, das die Bruecke ins Heimnetz und zu Home Assistant schlaegt (T-Beam). Der Gateway-Knoten ist gleichzeitig auch ein vollwertiger Mesh-Teilnehmer und leitet Pakete weiter.</p>
+    <div class="mermaid-wrap">
+      <pre class="mermaid">
+graph TD
+    D["T-Deck<br/>Portabler Client<br/>MeshOS/Ultra Firmware<br/>Tastatur + GPS + Offline-Karten"]
+    P["Smartphone-App<br/>Android / iOS"]
+    R["T-Beam Supreme SX1262<br/>Dedizierter Repeater<br/>OLED-Statusdisplay + GPS/BME280"]
+    G["T-Beam SX1276<br/>WiFi-Gateway<br/>Companion Radio Firmware"]
+    HA["Home Assistant<br/>meshcore-ha Integration"]
+    DASH["Dashboards<br/>Messenger + Kommandozeile"]
+    AUTO["Automationen<br/>Benachrichtigungen"]
+    MQTT["MQTT-Bruecke<br/>optional"]
+
+    D <-. BLE .-> P
+    D == "LoRa 869.618 MHz<br/>SF10 / BW 62.5 kHz" ==> R
+    R == "LoRa-Relay<br/>Paketweiterleitung" ==> G
+    G == "WiFi<br/>TCP Port 5000" ==> HA
+    HA --> DASH
+    HA --> AUTO
+    HA --> MQTT
+      </pre>
+    </div>
+    <p>Die Kommunikationskette in Kurzform: <strong>T-Deck &rarr; T-Beam Supreme</strong> (verschluesseltes LoRa-Paket), <strong>T-Beam Supreme &rarr; T-Beam</strong> (Relay zur Reichweitenverlaengerung), <strong>T-Beam &rarr; Heimnetz</strong> (WiFi/TCP:5000), <strong>Heimnetz &rarr; Home Assistant</strong> (meshcore-ha-Integration als TCP-Client), <strong>Home Assistant &rarr; Nutzer</strong> (Dashboard, Push-Benachrichtigung, MQTT).</p>
+  </div>
+</section>
+
+<section id="hardware">
+  <div class="container">
+    <h2>Hardware &amp; Firmware-Rollen</h2>
+    <table>
+      <tr><th>Geraet</th><th>Chip</th><th>Rolle</th><th>Firmware</th><th>Anbindung</th></tr>
+      <tr><td>LilyGo T-Beam v1.x</td><td>ESP32 + SX1276</td><td>Relay / WiFi-Gateway</td><td>Companion Radio WiFi (Eigenbau)</td><td>WiFi, TCP:5000</td></tr>
+      <tr><td>LilyGo T-Beam Supreme</td><td>ESP32-S3 + SX1262</td><td>Dedizierter Repeater</td><td>Repeater + OLED-Status (Eigenbau)</td><td>Standalone / USB</td></tr>
+      <tr><td>LilyGo T-Deck</td><td>ESP32-S3 + SX1262</td><td>Portabler Client</td><td>MeshOS/Ultra (closed-source)</td><td>Standalone / USB</td></tr>
+    </table>
+    <h3>Radio-Einstellungen (EU Long Range)</h3>
+    <table>
+      <tr><th>Parameter</th><th>Wert</th></tr>
+      <tr><td>Frequenz</td><td>869,618 MHz (EU g3-Subband, legal in DE/AT/CH)</td></tr>
+      <tr><td>Spreading Factor</td><td>SF10 (lange Reichweite)</td></tr>
+      <tr><td>Bandbreite</td><td>62,5 kHz</td></tr>
+      <tr><td>Coding Rate</td><td>4/5</td></tr>
+      <tr><td>TX-Leistung</td><td>20–22 dBm (Maximum je nach Chip)</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="techstack">
+  <div class="container">
+    <h2>Tech-Stack</h2>
+    <div class="tech-grid">
+      <div class="tech-item">MeshCore Firmware (C++)</div>
+      <div class="tech-item">PlatformIO</div>
+      <div class="tech-item">ESP32 / ESP32-S3</div>
+      <div class="tech-item">SX1276 / SX1262 LoRa</div>
+      <div class="tech-item">Home Assistant</div>
+      <div class="tech-item">meshcore-ha (HACS Custom Integration)</div>
+      <div class="tech-item">MQTT (optionale Bruecke)</div>
+      <div class="tech-item">Python 3 (Tile-Downloader)</div>
+      <div class="tech-item">esptool</div>
+      <div class="tech-item">Bash-Skripte</div>
+      <div class="tech-item">YAML (HA-Dashboards/Automationen)</div>
+      <div class="tech-item">OpenStreetMap Offline-Kacheln</div>
+    </div>
+  </div>
+</section>
+
+<section id="quickstart">
+  <div class="container">
+    <h2>Quickstart</h2>
+    <p>Grobablauf laut Setup-Guide: Repo klonen, MeshCore-Quellcode daneben klonen, Config-Vorlage kopieren und anpassen, Firmware bauen und flashen.</p>
+    <pre><code>git clone https://github.com/icepaule/IceMeshCore.git
+git clone https://github.com/meshcore-dev/MeshCore.git
+
+# WiFi-Gateway (T-Beam SX1276) bauen und flashen
+cp IceMeshCore/configs/tbeam_sx1276_wifi.ini \
+   MeshCore/variants/lilygo_tbeam_SX1276/platformio.ini
+# WIFI_SSID / WIFI_PWD in der Datei anpassen
+./IceMeshCore/scripts/build-tbeam.sh /dev/ttyACM0
+
+# Repeater (T-Beam Supreme SX1262) bauen und flashen
+cp IceMeshCore/configs/tbeam_supreme_sx1262_repeater.ini \
+   MeshCore/variants/lilygo_tbeam_supreme_SX1262/platformio.ini
+# ADVERT_NAME / ADMIN_PASSWORD in der Datei anpassen
+./IceMeshCore/scripts/build-tbeam-supreme.sh /dev/ttyACM0
+
+# T-Deck per Web-Flasher oder Skript
+./IceMeshCore/scripts/flash-tdeck.sh /dev/ttyACM0</code></pre>
+    <p>Anschliessend in Home Assistant ueber HACS die <code>meshcore-ha</code>-Integration installieren und per TCP mit dem Gateway (Port 5000) verbinden. Details siehe <code>docs/setup-guide.md</code> im Repository.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p><a href="https://github.com/icepaule/IceMeshCore">github.com/icepaule/IceMeshCore</a> &middot; <a href="https://icepaule.github.io/">icepaule.github.io</a></p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true, theme:'default'});</script>
